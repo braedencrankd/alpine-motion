@@ -1,3 +1,5 @@
+import { animate } from "motion";
+
 export default function (Alpine) {
   Alpine.directive("motion", motion);
 
