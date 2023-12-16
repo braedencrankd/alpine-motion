@@ -10,14 +10,22 @@ export default function (Alpine) {
   Alpine.magic("motion", () => (name, callback) => {
     // find a unique element with attribute x-motion:name="boxAnimation1"
 
-    const el = document.querySelector('x-motion:name="boxAnimation1"');
+    // find all elements with attribute x-motion:name="boxAnimation1"
+
+    const el = document.querySelector(`[x-motion\\:name="${name}"]`);
 
     if (!el) {
       console.warn(`x-motion:${name} not found`);
       return;
     }
 
-    console.log(id, callback);
+    switch (callback) {
+      case "play":
+        el.play();
+        break;
+      default:
+        break;
+    }
   });
 
   function motion(
@@ -31,7 +39,17 @@ export default function (Alpine) {
 
     const options = parseModifiers(el, modifiers);
 
-    animate(el, ...options);
+    // add a callback called trigger to the element
+    // that will trigger the animation
+    el.play = () => {
+      console.log("play");
+      const animation = animate(el, ...options);
+
+      animation.finished.then(() => {
+        // dispatch an event when the animation is finished
+        el.dispatchEvent(new Event("motion:finished"));
+      });
+    };
 
     cleanup(() => {
       console.log("cleanup");
