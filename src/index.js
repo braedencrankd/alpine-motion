@@ -8,23 +8,16 @@ export default function (Alpine) {
   Alpine.directive("motion", motion);
 
   Alpine.magic("motion", () => (name, callback) => {
-    // find a unique element with attribute x-motion:name="boxAnimation1"
-
-    // find all elements with attribute x-motion:name="boxAnimation1"
-
-    const el = document.querySelector(`[x-motion\\:name="${name}"]`);
+    /// find the element in the store by name
+    const el = Alpine.store("motion").elements[name];
 
     if (!el) {
       console.warn(`x-motion:${name} not found`);
       return;
     }
 
-    switch (callback) {
-      case "play":
-        el.play();
-        break;
-      default:
-        break;
+    if (typeof el.animation()[callback] === "function") {
+      el.animation()[callback]();
     }
   });
 
@@ -33,27 +26,30 @@ export default function (Alpine) {
     { expression, modifiers, value },
     { evaluateLater, cleanup }
   ) {
-    if (value !== "animate") {
-      return;
-    }
-
     const options = parseModifiers(el, modifiers);
 
-    // add a callback called trigger to the element
-    // that will trigger the animation
-    el.play = () => {
-      console.log("play");
-      const animation = animate(el, ...options);
+    console.log(options);
 
-      animation.finished.then(() => {
-        // dispatch an event when the animation is finished
-        el.dispatchEvent(new Event("motion:finished"));
-      });
-    };
+    registerMotion(el, value, options);
 
     cleanup(() => {
       console.log("cleanup");
     });
+  }
+
+  function registerMotion(el, name, options) {
+    // register the element in an Alpine store so we can find it later
+
+    // check if the store exists and create it if it doesn't otherwise append to it
+
+    if (!Alpine.store("motion")) {
+      Alpine.store("motion", { elements: {} });
+    }
+
+    Alpine.store("motion").elements[name] = {
+      name,
+      animation: () => animate(el, ...options),
+    };
   }
 
   function parseModifiers(el, modifiers) {
@@ -87,12 +83,12 @@ function parseValue(key, value) {
   }
 
   if (key === "duration") {
-    let match = value.match(/([0-9]+)ms/);
+    let match = value.match(/(-?[0-9]+)ms/);
     if (match) return parseFloat(match[1]) / 1000;
   }
 
   if (key === "rotate") {
-    let match = value.match(/([0-9]+)deg/);
+    let match = value.match(/(-?[0-9]+)deg/);
     if (match) return parseInt(match[1]);
   }
 
