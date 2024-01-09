@@ -1,6 +1,6 @@
 {
-  "name": "alpine-motion",
-  "version": "1.0.0",
+  "name": "@braedencrankd/alpine-motion",
+  "version": "0.1.0",
   "description": "An AlpineJS plugin for using the MotionOne API with Alpine Directives",
   "main": "src/index.js",
   "scripts": {

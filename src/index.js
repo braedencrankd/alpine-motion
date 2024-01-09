@@ -2,12 +2,10 @@ import { animate } from "motion";
 
 const unitModifiers = new Map([]);
 
-const directiveFunctions = new Map([]);
-
 export default function (Alpine) {
   Alpine.directive("motion", motion);
 
-  Alpine.magic("motion", () => (name, callback) => {
+  Alpine.magic("motion", () => (name) => {
     /// find the element in the store by name
     const el = Alpine.store("motion").elements[name];
 
@@ -16,32 +14,29 @@ export default function (Alpine) {
       return;
     }
 
-    if (typeof el.animation()[callback] === "function") {
-      el.animation()[callback]();
-    }
+    return el.animation();
   });
 
   function motion(
     el,
     { expression, modifiers, value },
-    { evaluateLater, cleanup }
+    { evaluateLater, effect, cleanup }
   ) {
-    const options = parseModifiers(el, modifiers);
+    // if there is an expression then we need to ignore modifiers and just run the expression
 
-    console.log(options);
+    const options =
+      expression !== ""
+        ? parseExpression(el, expression, evaluateLater)
+        : parseModifiers(modifiers);
 
-    registerMotion(el, value, options);
+    registerMotion(el, value, options, effect);
 
     cleanup(() => {
       console.log("cleanup");
     });
   }
 
-  function registerMotion(el, name, options) {
-    // register the element in an Alpine store so we can find it later
-
-    // check if the store exists and create it if it doesn't otherwise append to it
-
+  function registerMotion(el, name, options, effect) {
     if (!Alpine.store("motion")) {
       Alpine.store("motion", { elements: {} });
     }
@@ -50,9 +45,14 @@ export default function (Alpine) {
       name,
       animation: () => animate(el, ...options),
     };
+
+    // Loop over properties to check if they are reactive
+    // if they are then we need to watch them for changes
+
+    animateFromReactive(el, options, effect);
   }
 
-  function parseModifiers(el, modifiers) {
+  function parseModifiers(modifiers) {
     let unitOffset = 0;
 
     return modifiers.reduce((acc, modifier, index) => {
@@ -63,6 +63,53 @@ export default function (Alpine) {
       return acc;
     }, []);
   }
+}
+
+function animateFromReactive(el, options, effect) {
+  Array.from(options).forEach((option) => {
+    const key = Object.keys(option)[0];
+    const expression = Object.values(option)[0];
+
+    if (typeof expression === "function") {
+      effect(() => {
+        expression((value) => {
+          option[key] = value;
+          animate(el, ...options);
+        });
+      });
+    }
+  });
+}
+
+function parseExpression(el, expression, evaluateLater) {
+  // Get Alpinejs context data
+  const dataStack = Alpine.closestDataStack(el);
+
+  const options = expression
+    .split(",")
+    .map((option) => {
+      try {
+        option = option.replace(/(?<![.0-9])(\w+)(?![.0-9])/g, '"$1"');
+        option = JSON.parse(option);
+
+        const value = Object.values(option)[0];
+
+        dataStack.forEach((data) => {
+          const key = Object.keys(option)[0];
+
+          if (data.hasOwnProperty(value)) {
+            option[key] = evaluateLater(option[key]);
+          }
+        });
+
+        return option;
+      } catch (e) {
+        console.warn("Invalid x-motion expression");
+      }
+    })
+    .filter((option) => option);
+
+  return options;
 }
 
 function snakeCaseToCamelCase(str) {
