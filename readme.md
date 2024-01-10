@@ -6,8 +6,6 @@
 
 **DISCLAIMER: This package is still in active development and is not ready for production use. I'm open to any suggestions on improving this package.**
 
-An AlpineJS plugin to create a SwiperJS slider using the elegance alpine directives.
-
 ## Resources
 
 - [Motion One](https://motion.dev/)
@@ -24,7 +22,7 @@ An AlpineJS plugin to create a SwiperJS slider using the elegance alpine directi
 
 ## Installation
 
-To install the "alpine-swiper" package, you can use npm, pnpm or yarn. Run the following command in your project directory:
+To install the "alpine-motion" package, you can use npm, pnpm or yarn. Run the following command in your project directory:
 
 ```bash
 npm install @braedencrankd/alpine-motion
@@ -49,7 +47,7 @@ Alpine.plugin(alpineMotion);
 
 Define the `x-motion` directive on an element to create a motion animation. The following example will create a motion animation that will rotate the element 90 degrees over 1.5 seconds.
 
-_**Note:** make sure to add the `x-init` or `x-data` directive to the container element to ensure the swiper is initialized when Alpine is loaded._
+_**Note:** make sure to add the `x-init` or `x-data` directive to the container element to ensure the `x-motion` is initialized when Alpine is loaded._
 
 ```html
 <div x-init>
