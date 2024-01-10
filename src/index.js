@@ -23,7 +23,6 @@ export default function (Alpine) {
     { evaluateLater, effect, cleanup }
   ) {
     // if there is an expression then we need to ignore modifiers and just run the expression
-
     const options =
       expression !== ""
         ? parseExpression(el, expression, evaluateLater)
@@ -89,7 +88,8 @@ function parseExpression(el, expression, evaluateLater) {
     .split(",")
     .map((option) => {
       try {
-        option = option.replace(/(?<![.0-9])(\w+)(?![.0-9])/g, '"$1"');
+        option = option.replace(/\b(?<![.0-9])[a-z_][a-z0-9_]*\b/gi, '"$&"');
+
         option = JSON.parse(option);
 
         const value = Object.values(option)[0];

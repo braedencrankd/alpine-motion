@@ -8,7 +8,7 @@
 
 ## Resources
 
-- [Motion One](https://motion.dev/)
+- [Motion One](https://motion.dev/)¸
 - [Alpine JS](https://alpinejs.dev/)
 
 ## Table of Contents
