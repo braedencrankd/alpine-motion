@@ -2,6 +2,8 @@ import { animate } from "motion";
 
 const unitModifiers = new Map([]);
 
+const imports = new Map([["spring", import("motion")]]);
+
 export default function (Alpine) {
   Alpine.directive("motion", motion);
 
@@ -20,12 +22,12 @@ export default function (Alpine) {
   function motion(
     el,
     { expression, modifiers, value },
-    { evaluateLater, effect, cleanup }
+    { evaluateLater, evaluate, effect, cleanup }
   ) {
     // if there is an expression then we need to ignore modifiers and just run the expression
     const options =
       expression !== ""
-        ? parseExpression(el, expression, evaluateLater)
+        ? parseExpression(el, expression, evaluateLater, evaluate)
         : parseModifiers(modifiers);
 
     registerMotion(el, value, options, effect);
@@ -80,7 +82,7 @@ function animateFromReactive(el, options, effect) {
   });
 }
 
-function parseExpression(el, expression, evaluateLater) {
+function parseExpression(el, expression, evaluateLater, evaluate) {
   // Get Alpinejs context data
   const dataStack = Alpine.closestDataStack(el);
 
@@ -88,11 +90,17 @@ function parseExpression(el, expression, evaluateLater) {
     .split(",")
     .map((option) => {
       try {
-        option = option.replace(/\b(?<![.0-9])[a-z_][a-z0-9_]*\b/gi, '"$&"');
+        option = option.replace(
+          /\b(?<![.0-9])[a-z_][a-z0-9_]*\b(\(\))?/gi,
+          '"$&"'
+        );
 
         option = JSON.parse(option);
-
         const value = Object.values(option)[0];
+        const key = Object.keys(option)[0];
+
+        // Check if value is a function that is an import from motion
+        handleFunctionImports(option, value);
 
         dataStack.forEach((data) => {
           const key = Object.keys(option)[0];
@@ -110,6 +118,25 @@ function parseExpression(el, expression, evaluateLater) {
     .filter((option) => option);
 
   return options;
+}
+
+/**
+ * Handles function imports.
+ *
+ * @param {object} option - The option object.
+ * @param {string} value - The value to check for function imports.
+ */
+function handleFunctionImports(option, value) {
+  if (typeof value === "string" && value.includes("()")) {
+    const [fn] = value.split("()");
+    const key = Object.keys(option)[0];
+
+    if (imports.has(fn)) {
+      option[fn] = imports.get(fn).then((moduleBundle) => {
+        option[key] = moduleBundle[fn]();
+      });
+    }
+  }
 }
 
 function snakeCaseToCamelCase(str) {
