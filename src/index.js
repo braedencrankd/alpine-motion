@@ -87,21 +87,26 @@ function parseExpression(el, expression, evaluateLater, evaluate) {
   const dataStack = Alpine.closestDataStack(el);
 
   const options = expression
-    .split(",")
+    .split(/,(?![^()]*\))/) // Only split on commas that are not inside of parentheses
     .map((option) => {
       try {
+        /**
+         * The Regex below will wrap all inner keys in double quotes
+         * as well as expressions that need to be evaluated.
+         */
         option = option.replace(
-          /\b(?<![.0-9])[a-z_][a-z0-9_]*\b(\(\))?/gi,
+          /\b(?<![.0-9])[a-z_][a-z0-9_]*\b(\((?:[^()]|\([^()]*\))*\))?/g,
           '"$&"'
         );
 
         option = JSON.parse(option);
+
         const value = Object.values(option)[0];
-        const key = Object.keys(option)[0];
 
         // Check if value is a function that is an import from motion
-        handleFunctionImports(option, value);
+        handleFunctionImports(option, value, evaluate);
 
+        // Check Alpine Data Stack for reactive values
         dataStack.forEach((data) => {
           const key = Object.keys(option)[0];
 
@@ -112,7 +117,7 @@ function parseExpression(el, expression, evaluateLater, evaluate) {
 
         return option;
       } catch (e) {
-        console.warn("Invalid x-motion expression");
+        console.warn("Invalid x-motion expression: ", e);
       }
     })
     .filter((option) => option);
@@ -126,14 +131,27 @@ function parseExpression(el, expression, evaluateLater, evaluate) {
  * @param {object} option - The option object.
  * @param {string} value - The value to check for function imports.
  */
-function handleFunctionImports(option, value) {
-  if (typeof value === "string" && value.includes("()")) {
-    const [fn] = value.split("()");
+function handleFunctionImports(option, value, evaluate) {
+  // console.log(value);
+
+  console.log();
+
+  const looksLikeFunction =
+    typeof value === "string" && value.match(/.*\(.*?\)/) !== null;
+
+  if (looksLikeFunction) {
+    // split on function name: before '(' then args without the end bracket
+    const [fnName, brackets] = value.split(/(?=\()/);
+
+    // remove brackets from args
+    let args = brackets.replace(/[()]/g, "");
+    args = args === "" ? {} : evaluate(args);
+
     const key = Object.keys(option)[0];
 
-    if (imports.has(fn)) {
-      option[fn] = imports.get(fn).then((moduleBundle) => {
-        option[key] = moduleBundle[fn]();
+    if (imports.has(fnName)) {
+      option[fnName] = imports.get(fnName).then((moduleBundle) => {
+        option[key] = moduleBundle[fnName](args);
       });
     }
   }
