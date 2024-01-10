@@ -1,5 +1,7 @@
 # alpine-motion
 
+![alpine_motion_example](https://github.com/braedencrankd/alpine-motion/assets/99447151/3614613e-998e-46d0-b531-51b075a4127f)
+
 **DISCLAIMER: This package is still in active development and is not ready for production use. I'm open to any suggestions on improving this package.**
 
 An AlpineJS plugin to create a SwiperJS slider using the elegance alpine directives.
