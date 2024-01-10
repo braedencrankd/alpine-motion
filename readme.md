@@ -31,7 +31,7 @@ npm install @braedencrankd/alpine-motion
 # or
 yarn add @braedencrankd/alpine-motion
 # or
-pnpm add @braedencrankd/alpine-motion
+pnpm install @braedencrankd/alpine-motion
 ```
 
 ## Setup
