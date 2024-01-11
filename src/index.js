@@ -1,4 +1,4 @@
-import { animate } from "motion";
+import { animate, timeline } from "motion";
 
 const unitModifiers = new Map([]);
 
@@ -6,6 +6,30 @@ const imports = new Map([["spring", import("motion")]]);
 
 export default function (Alpine) {
   Alpine.directive("motion", motion);
+
+  Alpine.magic("timeline", () => async (names, options) => {
+    // dynamic import the timeline function from motion
+
+    // console.log(Alpine.store("motion"));
+
+    const elements = Object.keys(Alpine.store("motion").elements)
+      .filter((name) => names.includes(name))
+      .reduce((acc, name) => {
+        acc.push(Alpine.store("motion").elements[name]);
+        return acc;
+      }, []);
+
+    const moduleBundle = await import("motion");
+
+    const sequence = elements.map((element) => [
+      element.el,
+      ...element.animationData,
+    ]);
+
+    moduleBundle.timeline(sequence, options);
+
+    // console.log(names, options);
+  });
 
   Alpine.magic("motion", () => (name) => {
     /// find the element in the store by name
@@ -45,6 +69,8 @@ export default function (Alpine) {
     Alpine.store("motion").elements[name] = {
       name,
       animation: () => animate(el, ...options),
+      animationData: options,
+      el,
     };
 
     // Loop over properties to check if they are reactive
@@ -87,7 +113,7 @@ function parseExpression(el, expression, evaluateLater, evaluate) {
   const dataStack = Alpine.closestDataStack(el);
 
   const options = expression
-    .split(/,(?![^()]*\))/) // Only split on commas that are not inside of parentheses
+    .split(/,(?![^[\]{}()]*[\]}])/g) // Only split on commas that are not inside of parentheses or brackets
     .map((option) => {
       try {
         /**
