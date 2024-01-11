@@ -49,6 +49,9 @@ export default function (Alpine) {
     { evaluateLater, evaluate, effect, cleanup }
   ) {
     // if there is an expression then we need to ignore modifiers and just run the expression
+
+    console.log("Loading motion directive on version: 0.1.3");
+
     const options =
       expression !== ""
         ? parseExpression(el, expression, evaluateLater, evaluate)
