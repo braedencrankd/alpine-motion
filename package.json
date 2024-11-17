@@ -10,6 +10,6 @@
   "author": "Braeden Foster",
   "license": "ISC",
   "dependencies": {
-    "motion": "^10.16.4"
+    "motion": "^10.18.0"
   }
 }
