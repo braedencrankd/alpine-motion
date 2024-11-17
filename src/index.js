@@ -50,8 +50,6 @@ export default function (Alpine) {
   ) {
     // if there is an expression then we need to ignore modifiers and just run the expression
 
-    console.log("Loading motion directive on version: 0.1.4");
-
     const options =
       expression !== ""
         ? parseExpression(el, expression, evaluateLater, evaluate)
@@ -75,9 +73,6 @@ export default function (Alpine) {
       animationData: options,
       el,
     };
-
-    // Loop over properties to check if they are reactive
-    // if they are then we need to watch them for changes
 
     animateFromReactive(el, options, effect);
   }
@@ -112,41 +107,51 @@ function animateFromReactive(el, options, effect) {
 }
 
 function parseExpression(el, expression, evaluateLater, evaluate) {
-  // Get Alpinejs context data
   const dataStack = Alpine.closestDataStack(el);
 
   const options = expression
-    .split(/,(?![^[\]{}()]*[\]}])/g) // Only split on commas that are not inside of parentheses or brackets
+    .split(/,(?![^[\]{}()]*[\]}])/g)
     .map((option) => {
       try {
-        /**
-         * The Regex below will wrap all inner keys in double quotes
-         * as well as expressions that need to be evaluated.
-         */
+        // First, find any Alpine variables in the option
+        const alpineVarRegex = /\b(?<!['".])[a-zA-Z_][a-zA-Z0-9_]*\b(?!\()/g;
+        const alpineVars = option.match(alpineVarRegex) || [];
+
+        // Replace Alpine variables with their actual values from the data stack
+        alpineVars.forEach((varName) => {
+          for (const data of dataStack) {
+            if (data.hasOwnProperty(varName)) {
+              // Replace the variable with its stringified value
+              option = option.replace(
+                new RegExp(`\\b${varName}\\b`, "g"),
+                `"${varName}"`
+              ); // Keep the variable name as a string for later evaluation
+              break;
+            }
+          }
+        });
+
+        // Now wrap remaining identifiers in quotes (like function calls)
         option = option.replace(
           /\b(?<![.0-9])[a-z_][a-z0-9_]*\b(\((?:[^()]|\([^()]*\))*\))?/g,
           '"$&"'
         );
 
         option = JSON.parse(option);
-
         const value = Object.values(option)[0];
 
-        // Check if value is a function that is an import from motion
+        // Handle function imports
         handleFunctionImports(option, value, evaluate);
 
-        // Check Alpine Data Stack for reactive values
-        dataStack.forEach((data) => {
-          const key = Object.keys(option)[0];
-
-          if (data.hasOwnProperty(value)) {
-            option[key] = evaluateLater(option[key]);
-          }
-        });
+        // Now handle the Alpine reactive values
+        const key = Object.keys(option)[0];
+        if (typeof value === "string" && alpineVars.includes(value)) {
+          option[key] = evaluateLater(value);
+        }
 
         return option;
       } catch (e) {
-        console.warn("Invalid x-motion expression: ", e);
+        console.warn("Invalid x-motion expression: ", e, option);
       }
     })
     .filter((option) => option);
@@ -161,10 +166,6 @@ function parseExpression(el, expression, evaluateLater, evaluate) {
  * @param {string} value - The value to check for function imports.
  */
 function handleFunctionImports(option, value, evaluate) {
-  // console.log(value);
-
-  console.log();
-
   const looksLikeFunction =
     typeof value === "string" && value.match(/.*\(.*?\)/) !== null;
 
