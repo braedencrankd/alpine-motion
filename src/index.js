@@ -8,10 +8,6 @@ export default function (Alpine) {
   Alpine.directive("motion", motion);
 
   Alpine.magic("timeline", () => async (names, options) => {
-    // dynamic import the timeline function from motion
-
-    // console.log(Alpine.store("motion"));
-
     const elements = Object.keys(Alpine.store("motion").elements)
       .filter((name) => names.includes(name))
       .reduce((acc, name) => {
@@ -27,8 +23,6 @@ export default function (Alpine) {
     ]);
 
     moduleBundle.timeline(sequence, options);
-
-    // console.log(names, options);
   });
 
   Alpine.magic("motion", () => (name) => {
@@ -48,21 +42,30 @@ export default function (Alpine) {
     { expression, modifiers, value },
     { evaluateLater, evaluate, effect, cleanup }
   ) {
-    // if there is an expression then we need to ignore modifiers and just run the expression
+    const specialModifiersIndex = ["in-view"];
+    const specialModifiers = modifiers.filter((modifier) =>
+      specialModifiersIndex.includes(modifier)
+    );
+
+    console.log(value);
 
     const options =
       expression !== ""
         ? parseExpression(el, expression, evaluateLater, evaluate)
         : parseModifiers(modifiers);
 
-    registerMotion(el, value, options, effect);
+    if (!value) {
+      handleSpecialModifiers(el, options, effect, ["in-view"]);
+    } else {
+      registerMotion(el, value, options, effect, specialModifiers);
+    }
 
     cleanup(() => {
       console.log("cleanup");
     });
   }
 
-  function registerMotion(el, name, options, effect) {
+  function registerMotion(el, name, options, effect, specialModifiers = []) {
     if (!Alpine.store("motion")) {
       Alpine.store("motion", { elements: {} });
     }
@@ -73,6 +76,10 @@ export default function (Alpine) {
       animationData: options,
       el,
     };
+
+    console.log(specialModifiers);
+
+    handleSpecialModifiers(el, options, effect, specialModifiers);
 
     animateFromReactive(el, options, effect);
   }
@@ -87,6 +94,21 @@ export default function (Alpine) {
       }
       return acc;
     }, []);
+  }
+}
+
+async function handleSpecialModifiers(el, options, effect, specialModifiers) {
+  if (specialModifiers.length === 0) return;
+
+  // in-view
+  if (specialModifiers.includes("in-view")) {
+    const { inView } = await import("motion");
+
+    effect(() => {
+      inView(el, () => {
+        animate(el, ...options);
+      });
+    });
   }
 }
 
