@@ -5,6 +5,9 @@ const unitModifiers = new Map([]);
 const imports = new Map([
   ["spring", import("motion")],
   ["stagger", import("motion")],
+  ["inView", import("motion")],
+  ["scroll", import("motion")],
+  ["timeline", import("motion")],
 ]);
 
 export default function (Alpine) {
@@ -42,6 +45,12 @@ export default function (Alpine) {
 
   Alpine.magic("animate", () => (name, options) => {
     return animate(name, options);
+  });
+
+  Alpine.magic("scroll", () => async (props) => {
+    const { scroll } = await import("motion");
+
+    return scroll(props);
   });
 
   function motion(
@@ -134,13 +143,15 @@ function animateFromReactive(el, options, effect) {
 function parseExpression(el, expression, evaluateLater, evaluate) {
   const dataStack = Alpine.closestDataStack(el);
 
+  // Updated regex to handle nested arrays and objects more carefully
   const options = expression
-    .split(/,(?![^[\]{}()]*[\]}])/g)
+    .split(/,(?=(?:[^{}[\]]*|{[^{}]*}|\[[^\[\]]*\])*$)/)
     .map((option) => {
       try {
-        // First, find any Alpine variables in the option
-        const alpineVarRegex = /\b(?<!['".])[a-zA-Z_][a-zA-Z0-9_]*\b(?!\()/g;
-        const alpineVars = option.match(alpineVarRegex) || [];
+        // Modified to only look for variables on the right side of colons
+        const alpineVarRegex = /:\s*([a-zA-Z_][a-zA-Z0-9_]*)\b(?!\s*[({])/;
+        const match = option.match(alpineVarRegex);
+        const alpineVars = match ? [match[1]] : [];
 
         // Replace Alpine variables with their actual values from the data stack
         alpineVars.forEach((varName) => {
@@ -156,11 +167,13 @@ function parseExpression(el, expression, evaluateLater, evaluate) {
           }
         });
 
-        // Now wrap remaining identifiers in quotes (like function calls)
-        option = option.replace(
-          /\b(?<![.0-9])[a-z_][a-z0-9_]*\b(\((?:[^()]|\([^()]*\))*\))?/g,
-          '"$&"'
-        );
+        // Replace single quotes with double quotes, then wrap remaining identifiers
+        option = option
+          .replace(/'([^']+)'/g, '"$1"') // Replace single quotes with double quotes
+          .replace(
+            /(?<!['"])(\b(?<![.0-9])[a-z_][a-z0-9_]*\b(\((?:[^()]|\([^()]*\))*\))?)/g,
+            '"$1"'
+          );
 
         option = JSON.parse(option);
         const value = Object.values(option)[0];
