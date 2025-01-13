@@ -2,7 +2,10 @@ import { animate, timeline } from "motion";
 
 const unitModifiers = new Map([]);
 
-const imports = new Map([["spring", import("motion")]]);
+const imports = new Map([
+  ["spring", import("motion")],
+  ["stagger", import("motion")],
+]);
 
 export default function (Alpine) {
   Alpine.directive("motion", motion);
@@ -37,6 +40,10 @@ export default function (Alpine) {
     return el.animation();
   });
 
+  Alpine.magic("animate", () => (name, options) => {
+    return animate(name, options);
+  });
+
   function motion(
     el,
     { expression, modifiers, value },
@@ -46,8 +53,6 @@ export default function (Alpine) {
     const specialModifiers = modifiers.filter((modifier) =>
       specialModifiersIndex.includes(modifier)
     );
-
-    console.log(value);
 
     const options =
       expression !== ""
@@ -76,8 +81,6 @@ export default function (Alpine) {
       animationData: options,
       el,
     };
-
-    console.log(specialModifiers);
 
     handleSpecialModifiers(el, options, effect, specialModifiers);
 
