@@ -47,10 +47,10 @@ export default function (Alpine) {
     return animate(name, options);
   });
 
-  Alpine.magic("scroll", () => async (props) => {
+  Alpine.magic("scroll", () => async (props, options) => {
     const { scroll } = await import("motion");
 
-    return scroll(props);
+    return scroll(props, options);
   });
 
   function motion(
