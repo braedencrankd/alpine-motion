@@ -1,4 +1,9 @@
-import { animate, spring, timeline, inView, scroll } from "motion";
+import { animate, spring, timeline, inView, scroll, stagger } from "motion";
+
+const functionRegistry = {
+  spring: (...args) => spring(...args),
+  stagger: (...args) => stagger(...args),
+};
 
 export default function (Alpine) {
   Alpine.directive("motion", motion);
@@ -69,36 +74,6 @@ export default function (Alpine) {
     });
   }
 
-  async function allocateAnimations(
-    animationData,
-    el,
-    effect,
-    specialModifiers
-  ) {
-    if (!Alpine.store("motion")) {
-      Alpine.store("motion", { elements: {} });
-    }
-    // Running in an effect allows the animation to be run when the data changes
-    effect(() => {
-      animationData(async (data) => {
-        const resolvedData = resolveSpringCalls(data);
-        for (const [key, value] of Object.entries(resolvedData)) {
-          handleSpecialModifiers(el, value, effect, specialModifiers);
-          // Already exists
-          if (Alpine.store("motion").elements[key]) {
-            animate(el, ...value);
-            return;
-          }
-          Alpine.store("motion").elements[key] = {
-            name: key,
-            options: value,
-            el,
-          };
-        }
-      });
-    });
-  }
-
   function registerMotion(
     el,
     expression,
@@ -109,15 +84,24 @@ export default function (Alpine) {
   ) {
     const animationData = parseExpression(expression, evaluateLater);
 
-    // if nameless then run the animation now
+    // if nameless then run the animation now when in view
     if (animationData.nameless) {
       effect(() => {
         animationData.nameless((data) => {
-          handleSpecialModifiers(el, data, effect, specialModifiers);
+          const resolvedData = resolveFunctionCalls(data);
+          const animationHandled = handleSpecialModifiers(
+            el,
+            resolvedData,
+            effect,
+            specialModifiers
+          );
 
-          inView(el, () => {
-            animate(el, ...data);
-          });
+          // Defaults to in-view if no special modifiers are used and is nameless
+          if (!animationHandled) {
+            inView(el, () => {
+              animate(el, ...resolvedData);
+            });
+          }
         });
       });
       return;
@@ -130,14 +114,40 @@ export default function (Alpine) {
   }
 }
 
-async function handleSpecialModifiers(el, options, effect, specialModifiers) {
-  if (specialModifiers.length === 0) return;
+async function allocateAnimations(animationData, el, effect, specialModifiers) {
+  if (!Alpine.store("motion")) {
+    Alpine.store("motion", { elements: {} });
+  }
+  // Running in an effect allows the animation to be run when the data changes
+  effect(() => {
+    animationData(async (data) => {
+      const resolvedData = resolveFunctionCalls(data);
+      for (const [key, value] of Object.entries(resolvedData)) {
+        handleSpecialModifiers(el, value, effect, specialModifiers);
+        // Already exists
+        if (Alpine.store("motion").elements[key]) {
+          animate(el, ...value);
+          return;
+        }
+        Alpine.store("motion").elements[key] = {
+          name: key,
+          options: value,
+          el,
+        };
+      }
+    });
+  });
+}
+
+function handleSpecialModifiers(el, options, effect, specialModifiers) {
+  if (specialModifiers.length === 0) return false;
 
   //in-view
   if (specialModifiers.includes("in-view")) {
     inView(el, () => {
       animate(el, ...options);
     });
+    return true;
   }
 
   if (specialModifiers.includes("scroll")) {
@@ -155,17 +165,40 @@ async function handleSpecialModifiers(el, options, effect, specialModifiers) {
     };
 
     scroll(animation, settings);
+    return true;
   }
 }
 
+/**
+ * Parses an expression string and handles special cases for spring animations
+ * @param {string} expression - The expression to parse, can be a single object or a spring animation call
+ * @param {Function} evaluateLater - Function to evaluate the expression later in Alpine.js context
+ * @returns {Object} An object with either a 'nameless' or 'named' property containing the evaluated expression
+ *
+ * If the expression is a single object (wrapped in curly braces), it returns:
+ * { nameless: evaluatedExpression }
+ *
+ * Otherwise returns:
+ * { named: evaluatedExpression }
+ *
+ * For spring animations, it transforms spring() calls into marker objects that can be
+ * processed later by resolveSpringCalls()
+ */
 function parseExpression(expression, evaluateLater) {
   const isSingleObject = expression.match(/^\{.*\}$/);
 
-  if (expression.includes("spring(")) {
-    // Replace spring calls with a marker object
+  // Create regex pattern for all registered functions
+  const functionPattern = new RegExp(
+    `(${Object.keys(functionRegistry).join("|")})\\((.*?)\\)`,
+    "g"
+  );
+
+  if (expression.includes("(")) {
+    // Replace function calls with marker objects
     expression = expression.replace(
-      /spring\((.*?)\)/g,
-      (_, args) => `({ _springCall: true, args: [${args}] })`
+      functionPattern,
+      (_, name, args) =>
+        `({ _functionCall: true, name: '${name}', args: [${args}] })`
     );
   }
 
@@ -180,28 +213,44 @@ function parseExpression(expression, evaluateLater) {
   };
 }
 
-function resolveSpringCalls(data) {
+function resolveFunctionCalls(data) {
   function resolveValue(value) {
-    // Base case: if value is a spring call object
-    if (value && typeof value === "object" && value._springCall) {
-      return spring(...value.args);
+    // Return early for null or undefined
+    if (value == null) return value;
+
+    // Return early for primitive values
+    if (typeof value !== "object") return value;
+
+    // Handle function calls
+    if (value._functionCall && functionRegistry[value.name]) {
+      return functionRegistry[value.name](...value.args);
     }
 
-    // If value is an object or array, recursively resolve its values
-    if (value && typeof value === "object") {
-      if (Array.isArray(value)) {
-        return value.map((v) => resolveValue(v));
-      }
+    // Handle arrays
+    if (Array.isArray(value)) {
+      return value.map((v) => resolveValue(v));
+    }
+
+    // Handle plain objects
+    if (value.constructor === Object) {
       return Object.fromEntries(
         Object.entries(value).map(([k, v]) => [k, resolveValue(v)])
       );
     }
 
-    // Return primitive values as-is
     return value;
   }
 
-  return Object.fromEntries(
-    Object.entries(data).map(([key, value]) => [key, resolveValue(value)])
-  );
+  // Handle the top-level input
+  if (Array.isArray(data)) {
+    return data.map((item) => resolveValue(item));
+  }
+
+  if (data && typeof data === "object") {
+    return Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [key, resolveValue(value)])
+    );
+  }
+
+  return data;
 }
