@@ -1,6 +1,6 @@
 {
   "name": "@braedencrankd/alpine-motion",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "An AlpineJS plugin for using the MotionOne API with Alpine Directives",
   "homepage": "https://alpine-motion-examples.vercel.app/",
   "main": "src/index.js",
@@ -10,6 +10,6 @@
   "author": "Braeden Foster",
   "license": "ISC",
   "dependencies": {
-    "motion": "^11.17.0"
+    "motion": "^11.18.0"
   }
 }

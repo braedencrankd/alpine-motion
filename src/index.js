@@ -1,4 +1,4 @@
-import { animate, spring, timeline, inView, scroll, stagger } from "motion";
+import { animate, spring, inView, scroll, stagger } from "motion";
 
 const functionRegistry = {
   spring: (...args) => spring(...args),
@@ -21,7 +21,7 @@ export default function (Alpine) {
       ...Alpine.raw(element.options),
     ]);
 
-    timeline(sequence);
+    animate(sequence, options);
   });
 
   Alpine.magic("motion", () => (name) => {
