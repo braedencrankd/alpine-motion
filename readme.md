@@ -66,42 +66,51 @@ _**Note:** make sure to add the `x-init` or `x-data` directive to the container 
     >
       Reverse
     </button>
-    <!-- Pausing an animation -->
-    <button
-      class=" px-6 py-1.5 rounded bg-green-500 text-white"
-      @click="$motion('box-animation-1').pause()"
-    >
-      Pause
-    </button>
   </div>
   <!-- Defining two different animations on the same element -->
   <div
-    x-motion:box-animation-1.rotate.90deg.duration.1500ms
-    x-motion:box-animation-2.rotate.-90deg.duration.1500ms
+    x-motion="{
+      'box-animation-1': [ { rotate: 90 }, { duration: 1 } ],
+      'box-animation-2': [ { rotate: -90 } { duration: 1 } ],
+    }"
     class="w-24 h-24 bg-indigo-500 rounded-lg"
   ></div>
 </div>
 ```
 
-### Modifiers Syntax
+### Nameless Animations
 
-The simplist way to configure animation is to use modifiers. Modifiers come in pairs of `property` and `value`. The following example will create a motion animation that will rotate the element 90 degrees over 1.5 seconds.
-
-```html
-<div x-motion:box-animation-1.rotate.90deg.duration.1500ms>...</div>
-```
-
-_Note: Each modifier corresponds to the options defined by the Motion One package: the documentation can be found [here](https://motion.dev/dom/animate)._
-
-### Options Syntax
-
-Alternativly you can pass a list of objects to the `x-motion` directive.
+The simplist way to declare animations is by creating nameless animation using the `x-motion` directive. Nameless animations are run when the animated element is visible in the viewport.
 
 ```html
-<div x-motion:box-animation-three="{ rotate: 90 }, { duration: 1.5 }">...</div>
+<div x-motion="{ rotate: 90 }, { duration: 1.5 }">...</div>
 ```
 
-The benefit of this syntax is that you can pass Alpine data into the values of the object. For example:
+### Named animation
+
+The alternative method of declaring animations is by creating named animations. This is where you can delcare one or more animations in `x-motion` directive expressions where the name is the key for each animation.
+
+```html
+<div id="test-1" x-motion="{
+  'animation-one': [ {x: 100} , { duration: 0.5 } ],
+}" class="mt-10 w-24 h-24 bg-teal-400 rounded-lg"></div>
+```
+
+The benefit of this syntax is that these animations get put in an Alpine Store where you can run the animations at any point.
+
+### $motion magic ✨
+
+The `$motion` alpine magic is used for getting and executing stored animations.
+
+```html
+<button class="px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
+        @click="$motion('box-animation-1').play()">
+  Play
+</button>
+```
+
+
+### Reactive Animations 🪄
 
 Here we are updating the the `currentRotationPos` variable when the buttons are clicked. Because this value is being used in the animation, the animation will run with the updated value.
 
@@ -117,7 +126,7 @@ Here we are updating the the `currentRotationPos` variable when the buttons are 
   </div>
 
   <div
-    x-motion:box-animation-three="{ rotate: currentRotationPos }, { duration: 1.5 }"
+    x-motion="{ rotate: currentRotationPos }, { duration: 1.5 }"
     class="w-24 h-24 bg-indigo-500 rounded-lg"
   ></div>
 </div>
