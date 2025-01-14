@@ -1,4 +1,4 @@
-import { animate, spring, timeline, inView } from "motion";
+import { animate, spring, timeline, inView, scroll } from "motion";
 
 export default function (Alpine) {
   Alpine.directive("motion", motion);
@@ -42,8 +42,6 @@ export default function (Alpine) {
   });
 
   Alpine.magic("scroll", () => async (callback, options) => {
-    const { scroll } = await import("motion");
-
     return scroll(callback, options);
   });
 
@@ -52,7 +50,7 @@ export default function (Alpine) {
     { expression, modifiers, value },
     { evaluateLater, evaluate, effect, cleanup }
   ) {
-    const specialModifiersIndex = ["in-view"];
+    const specialModifiersIndex = ["in-view", "scroll"];
     const specialModifiers = modifiers.filter((modifier) =>
       specialModifiersIndex.includes(modifier)
     );
@@ -136,11 +134,27 @@ async function handleSpecialModifiers(el, options, effect, specialModifiers) {
   if (specialModifiers.length === 0) return;
 
   //in-view
-  console.log(options);
   if (specialModifiers.includes("in-view")) {
     inView(el, () => {
       animate(el, ...options);
     });
+  }
+
+  if (specialModifiers.includes("scroll")) {
+    const animation = animate(el, ...options);
+
+    // find the scroll target in options if it exists
+    const scrollTarget = options.find((option) => option.scrollTarget);
+    const scrollContainer = options.find((option) => option.scrollContainer);
+    const scrollAxis = options.find((option) => option.scrollAxis);
+
+    const settings = {
+      target: scrollTarget ? scrollTarget.scrollTarget : undefined,
+      container: scrollContainer ? scrollContainer.scrollContainer : undefined,
+      axis: scrollAxis ? scrollAxis.scrollAxis : undefined,
+    };
+
+    scroll(animation, settings);
   }
 }
 
