@@ -50,6 +50,18 @@ export default function (Alpine) {
     return scroll(callback, options);
   });
 
+  Alpine.magic("stagger", () => (callback, options) => {
+    return stagger(callback, options);
+  });
+
+  Alpine.magic("inView", () => (callback, options) => {
+    return inView(callback, options);
+  });
+
+  Alpine.magic("spring", () => (callback, options) => {
+    return spring(callback, options);
+  });
+
   async function motion(
     el,
     { expression, modifiers, value },
