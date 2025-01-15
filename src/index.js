@@ -42,11 +42,11 @@ export default function (Alpine) {
     return animate(animationData.el, ...animationData.options);
   });
 
-  Alpine.magic("animate", () => async (name, options) => {
+  Alpine.magic("animate", () => (name, options) => {
     return animate(name, options);
   });
 
-  Alpine.magic("scroll", () => async (callback, options) => {
+  Alpine.magic("scroll", () => (callback, options) => {
     return scroll(callback, options);
   });
 
