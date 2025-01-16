@@ -1,15 +1,19 @@
 {
   "name": "@braedencrankd/alpine-motion",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "An AlpineJS plugin for using the MotionOne API with Alpine Directives",
   "homepage": "https://alpine-motion-examples.vercel.app/",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node scripts/build.js"
   },
   "author": "Braeden Foster",
   "license": "ISC",
   "dependencies": {
     "motion": "^11.18.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.2"
   }
 }

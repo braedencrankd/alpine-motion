@@ -22,6 +22,16 @@
 
 ## Installation
 
+### With a CDN
+
+```html
+<script defer src="https://unpkg.com/@braedencrankd/alpine-motion@latest/dist/alpineMotion.min.js"></script>
+
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script
+```
+
+### With NPM
+
 To install the "alpine-motion" package, you can use npm, pnpm or yarn. Run the following command in your project directory:
 
 ```bash
@@ -91,9 +101,13 @@ The simplist way to declare animations is by creating nameless animation using t
 The alternative method of declaring animations is by creating named animations. This is where you can delcare one or more animations in `x-motion` directive expressions where the name is the key for each animation.
 
 ```html
-<div id="test-1" x-motion="{
+<div
+  id="test-1"
+  x-motion="{
   'animation-one': [ {x: 100} , { duration: 0.5 } ],
-}" class="mt-10 w-24 h-24 bg-teal-400 rounded-lg"></div>
+}"
+  class="mt-10 w-24 h-24 bg-teal-400 rounded-lg"
+></div>
 ```
 
 The benefit of this syntax is that these animations get put in an Alpine Store where you can run the animations at any point.
@@ -103,12 +117,13 @@ The benefit of this syntax is that these animations get put in an Alpine Store w
 The `$motion` alpine magic is used for getting and executing stored animations.
 
 ```html
-<button class="px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
-        @click="$motion('box-animation-1').play()">
+<button
+  class="px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
+  @click="$motion('box-animation-1').play()"
+>
   Play
 </button>
 ```
-
 
 ### Reactive Animations 🪄
 
