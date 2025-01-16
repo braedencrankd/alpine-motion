@@ -177,7 +177,7 @@ Basic scroll triggered animations are created by adding the `scroll` modifier to
 <div x-motion.scroll="{ rotate: 90 }">...</div>
 ```
 
-### If you need to localize where the scroll starts and stops you can define the `scrollTarget` and `scrollContainer` options.
+If you need to localize where the scroll starts and stops you can define the `scrollTarget` and `scrollContainer` options.
 
 ```html
 <div
