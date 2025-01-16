@@ -21,15 +21,21 @@
   - [Named animation](#named-animation)
   - [$motion magic ✨](#motion-magic-)
   - [Reactive Animations 🪄](#reactive-animations-)
+  - [in-view modifier](#in-view-modifier)
+  - [Scroll Triggered Animations 📜](#scroll-triggered-animations-)
+  - [Scroll Triggered Animations with Alpine Magic 🪄](#scroll-triggered-animations-with-alpine-magic-)
 
 ## Installation
 
 ### With a CDN
 
 ```html
-<script defer src="https://unpkg.com/@braedencrankd/alpine-motion@latest/dist/alpineMotion.min.js"></script>
+<script
+  defer
+  src="https://unpkg.com/@braedencrankd/alpine-motion@latest/dist/alpineMotion.min.js"
+></script>
 
-<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 ```
 
 ### With NPM
@@ -146,5 +152,53 @@ Here we are updating the the `currentRotationPos` variable when the buttons are 
     x-motion="{ rotate: currentRotationPos }, { duration: 1.5 }"
     class="w-24 h-24 bg-indigo-500 rounded-lg"
   ></div>
+</div>
+```
+
+### in-view modifier
+
+The `in-view` modifier is used to trigger animations when the element is in the viewport.
+
+```html
+<div
+  x-motion.in-view="{
+  'in-view-animation': [ { rotate: 90 }, { duration: 1 } ],
+}"
+>
+  ...
+</div>
+```
+
+### Scroll Triggered Animations 📜
+
+Basic scroll triggered animations are created by adding the `scroll` modifier to the `x-motion` directive.
+
+```html
+<div x-motion.scroll="{ rotate: 90 }">...</div>
+```
+
+### If you need to localize where the scroll starts and stops you can define the `scrollTarget` and `scrollContainer` options.
+
+```html
+<div
+  x-motion.scroll="{ rotate: 90 }, { scrollTarget: '#scroll-container', scrollContainer: '#scroll-container' }"
+>
+  ...
+</div>
+```
+
+### Scroll Triggered Animations with Alpine Magic 🪄
+
+You can also use Alpine Magic to trigger scroll triggered animations.
+
+```html
+<div x-init="$nextTick(() => $scroll('scroll-animation'))">
+  <div
+    x-motion="{
+      'scroll-animation': [ { rotate: 90 } ],
+    }"
+  >
+    ...
+  </div>
 </div>
 ```
