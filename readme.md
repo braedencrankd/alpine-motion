@@ -16,9 +16,11 @@
 - [Installation](#installation)
 - [Setup](#setup)
 - [Usage](#usage)
-  - [Basic Usage](#basic-usage)
-  - [Modifiers Syntax](#modifiers-syntax)
-  - [Options Syntax](#options-syntax)
+  - [Using the `x-motion` Directive](#using-the-x-motion-directive)
+  - [Nameless Animations](#nameless-animations)
+  - [Named animation](#named-animation)
+  - [$motion magic ✨](#motion-magic-)
+  - [Reactive Animations 🪄](#reactive-animations-)
 
 ## Installation
 
