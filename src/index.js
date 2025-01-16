@@ -169,11 +169,13 @@ function handleSpecialModifiers(el, options, effect, specialModifiers) {
     const scrollTarget = options.find((option) => option.scrollTarget);
     const scrollContainer = options.find((option) => option.scrollContainer);
     const scrollAxis = options.find((option) => option.scrollAxis);
+    const scrollOffset = options.find((option) => option.scrollOffset);
 
     const settings = {
       target: scrollTarget ? scrollTarget.scrollTarget : undefined,
       container: scrollContainer ? scrollContainer.scrollContainer : undefined,
       axis: scrollAxis ? scrollAxis.scrollAxis : undefined,
+      offset: scrollOffset ? scrollOffset.scrollOffset : undefined,
     };
 
     scroll(animation, settings);
