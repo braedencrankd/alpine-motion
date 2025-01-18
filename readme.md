@@ -68,18 +68,18 @@ Define the `x-motion` directive on an element to create a motion animation. The 
 _**Note:** make sure to add the `x-init` or `x-data` directive to the container element to ensure the `x-motion` is initialized when Alpine is loaded._
 
 ```html
-<div x-init>
+<div x-init class="container mx-auto mt-10">
   <div class="flex flex-wrap gap-2 mb-10">
     <!-- Playing a named animation -->
     <button
-      class="px-6 py-1.5 rounded"
+      class="px-6 py-1.5 rounded bg-gray-200"
       @click="$motion('box-animation-1').play()"
     >
       Play
     </button>
     <!-- Plauing another named animation on the same element -->
     <button
-      class="px-6 py-1.5 rounded"
+      class="px-6 py-1.5 rounded bg-gray-200"
       @click="$motion('box-animation-2').play()"
     >
       Reverse
@@ -89,7 +89,7 @@ _**Note:** make sure to add the `x-init` or `x-data` directive to the container 
   <div
     x-motion="{
       'box-animation-1': [ { rotate: 90 }, { duration: 1 } ],
-      'box-animation-2': [ { rotate: -90 } { duration: 1 } ],
+      'box-animation-2': [ { rotate: -90 }, { duration: 1 } ],
     }"
     class="w-24 h-24 bg-indigo-500 rounded-lg"
   ></div>
