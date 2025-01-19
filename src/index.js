@@ -110,9 +110,7 @@ export default function (Alpine) {
 
           // Defaults to in-view if no special modifiers are used and is nameless
           if (!animationHandled) {
-            inView(el, () => {
-              animate(el, ...resolvedData);
-            });
+            animate(el, ...resolvedData);
           }
         });
       });
